@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>12面互动骰子游戏</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial Rounded MT Bold', 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            color: white;
+        }
+        
+        .container {
+            max-width: 800px;
+            width: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            border-radius: 20px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+            padding: 30px;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        h1 {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            text-shadow: 0 3px 6px rgba(0, 0, 0, 0.4);
+            color: #FFD700;
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-bottom: 20px;
+        }
+        
+        .game-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 30px;
+        }
+        
+        .dice-container {
+            width: 250px;
+            height: 250px;
+            position: relative;
+            perspective: 1000px;
+            margin: 20px auto;
+        }
+        
+        .dice {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transform: rotateX(20deg) rotateY(20deg);
+            transition: transform 2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        
+        .dice-face {
+            position: absolute;
+            width: 120px;
+            height: 120px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border-radius: 15px;
+            font-weight: bold;
+            text-align: center;
+            padding: 10px;
+            font-size: 0.9rem;
+            box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.1);
+            border: 3px solid rgba(255, 255, 255, 0.2);
+            transform-style: preserve-3d;
+            backface-visibility: visible;
+        }
+        
+        /* 12面骰子3D布局 - 修正后的正十二面体 */
+        /* 每个面都是一个正五边形，需要精确的角度计算 */
+        .face-1 { 
+            background-color: #FF6B6B; 
+            transform: translateZ(60px);
+        }
+        .face-2 { 
+            background-color: #4ECDC4; 
+            transform: rotateY(180deg) translateZ(60px);
+        }
+        .face-3 { 
+            background-color: #FFD166; 
+            transform: rotateY(90deg) translateZ(60px);
+        }
+        .face-4 { 
+            background-color: #06D6A0; 
+            transform: rotateY(-90deg) translateZ(60px);
+        }
+        .face-5 { 
+            background-color: #118AB2; 
+            transform: rotateX(90deg) translateZ(60px);
+        }
+        .face-6 { 
+            background-color: #EF476F; 
+            transform: rotateX(-90deg) translateZ(60px);
+        }
+        .face-7 { 
+            background-color: #7B2CBF; 
+            transform: rotateY(60deg) rotateX(54.74deg) translateZ(60px);
+        }
+        .face-8 { 
+            background-color: #F15BB5; 
+            transform: rotateY(-60deg) rotateX(54.74deg) translateZ(60px);
+        }
+        .face-9 { 
+            background-color: #9B5DE5; 
+            transform: rotateY(60deg) rotateX(-54.74deg) translateZ(60px);
+        }
+        .face-10 { 
+            background-color: #00BBF9; 
+            transform: rotateY(-60deg) rotateX(-54.74deg) translateZ(60px);
+        }
+        .face-11 { 
+            background-color: #00F5D4; 
+            transform: rotateY(180deg) rotateX(54.74deg) translateZ(60px);
+        }
+        .face-12 { 
+            background-color: #FF9E00; 
+            transform: rotateY(180deg) rotateX(-54.74deg) translateZ(60px);
+        }
+        
+        .dice-icon {
+            font-size: 2.5rem;
+            margin-bottom: 5px;
+        }
+        
+        .controls {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            width: 100%;
+        }
+        
+        .roll-btn {
+            background: linear-gradient(135deg, #FF9A00 0%, #FF0058 100%);
+            color: white;
+            border: none;
+            padding: 18px 45px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 8px 20px rgba(255, 0, 88, 0.4);
+        }
+        
+        .roll-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 25px rgba(255, 0, 88, 0.5);
+        }
+        
+        .roll-btn:active {
+            transform: translateY(0);
+        }
+        
+        .roll-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+        
+        .result-container {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 25px;
+            width: 100%;
+            min-height: 180px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            margin-top: 20px;
+            transition: all 0.5s;
+        }
+        
+        .result-title {
+            font-size: 1.8rem;
+            color: #FFD700;
+            margin-bottom: 15px;
+        }
+        
+        .result-description {
+            font-size: 1.4rem;
+            line-height: 1.5;
+            text-align: center;
+        }
+        
+        .result-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+        
+        .player-list {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .player {
+            background-color: rgba(255, 255, 255, 0.1);
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-size: 1.1rem;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        
+        .player.active {
+            background-color: #FFD700;
+            color: #333;
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(255, 215, 0, 0.4);
+        }
+        
+        .instructions {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 30px;
+        }
+        
+        .instructions h3 {
+            color: #FFD700;
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+        }
+        
+        .instructions ul {
+            padding-left: 20px;
+            line-height: 1.6;
+        }
+        
+        .instructions li {
+            margin-bottom: 8px;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .player-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            justify-content: center;
+        }
+        
+        .player-controls button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        
+        .add-player {
+            background-color: #06D6A0;
+            color: white;
+        }
+        
+        .remove-player {
+            background-color: #EF476F;
+            color: white;
+        }
+        
+        .player-controls button:hover {
+            opacity: 0.9;
+            transform: scale(1.05);
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 2.2rem;
+            }
+            
+            .dice-container {
+                width: 200px;
+                height: 200px;
+            }
+            
+            .dice-face {
+                width: 100px;
+                height: 100px;
+                font-size: 0.8rem;
+                padding: 8px;
+            }
+            
+            .dice-icon {
+                font-size: 2rem;
+            }
+            
+            .roll-btn {
+                padding: 15px 35px;
+                font-size: 1.3rem;
+            }
+            
+            .result-description {
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-dice"></i> 12面互动骰子</h1>
+            <p class="subtitle">聚会必备！点击掷骰子开始游戏</p>
+        </header>
+        
+        <div class="game-area">
+            <div class="dice-container">
+                <div class="dice" id="dice">
+                    <!-- 骰子12个面 -->
+                    <div class="dice-face face-1">
+                        <div class="dice-icon">👥</div>
+                        <div>所有人喝一杯</div>
+                    </div>
+                    <div class="dice-face face-2">
+                        <div class="dice-icon">🙋</div>
+                        <div>自己喝一杯</div>
+                    </div>
+                    <div class="dice-face face-3">
+                        <div class="dice-icon">🙋</div>
+                        <div>自己喝半杯</div>
+                    </div>
+                    <div class="dice-face face-4">
+                        <div class="dice-icon">👉</div>
+                        <div>指定一人喝半杯</div>
+                    </div>
+                    <div class="dice-face face-5">
+                        <div class="dice-icon">👉</div>
+                        <div>指定一人喝一杯</div>
+                    </div>
+                    <div class="dice-face face-6">
+                        <div class="dice-icon">💞</div>
+                        <div>交杯酒挑战</div>
+                    </div>
+                    <div class="dice-face face-7">
+                        <div class="dice-icon">🎭</div>
+                        <div>大冒险时刻</div>
+                    </div>
+                    <div class="dice-face face-8">
+                        <div class="dice-icon">💖</div>
+                        <div>真心话时间</div>
+                    </div>
+                    <div class="dice-face face-9">
+                        <div class="dice-icon">🎊</div>
+                        <div>祝福接力</div>
+                    </div>
+                    <div class="dice-face face-10">
+                        <div class="dice-icon">😘</div>
+                        <div>全场飞吻</div>
+                    </div>
+                    <div class="dice-face face-11">
+                        <div class="dice-icon">📱</div>
+                        <div>抖音异性挑战</div>
+                    </div>
+                    <div class="dice-face face-12">
+                        <div class="dice-icon">🎤</div>
+                        <div>即兴演唱</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="controls">
+                <button class="roll-btn" id="rollBtn">
+                    <i class="fas fa-redo-alt"></i> 掷骰子
+                </button>
+                
+                <div class="result-container" id="resultContainer">
+                    <div class="result-icon" id="resultIcon">🎲</div>
+                    <div class="result-title" id="resultTitle">等待掷骰子...</div>
+                    <div class="result-description" id="resultDescription">点击上方按钮掷骰子开始游戏</div>
+                </div>
+                
+                <div class="player-list" id="playerList">
+                    <!-- 玩家列表会通过JS动态生成 -->
+                </div>
+                
+                <div class="player-controls">
+                    <button class="add-player" id="addPlayerBtn">
+                        <i class="fas fa-plus"></i> 添加玩家
+                    </button>
+                    <button class="remove-player" id="removePlayerBtn">
+                        <i class="fas fa-minus"></i> 移除玩家
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="instructions">
+            <h3><i class="fas fa-info-circle"></i> 游戏说明</h3>
+            <ul>
+                <li>每人轮流点击"掷骰子"按钮</li>
+                <li>根据骰子结果执行相应指令</li>
+                <li>游戏支持2-8人参与</li>
+                <li>可以自定义玩家姓名（双击玩家名字修改）</li>
+                <li>喝酒请量力而行，可以饮料代替</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // 游戏数据
+        const gameData = {
+            currentPlayer: 0,
+            players: ["玩家1", "玩家2", "玩家3", "玩家4"],
+            isRolling: false,
+            
+            // 骰子面详细信息
+            faces: [
+                { 
+                    icon: "👥", 
+                    title: "所有人喝一杯", 
+                    description: "全场一起干杯！友谊万岁！",
+                    color: "#FF6B6B"
+                },
+                { 
+                    icon: "🙋", 
+                    title: "自己喝一杯", 
+                    description: "自罚一杯，养鱼可不行哦！",
+                    color: "#4ECDC4"
+                },
+                { 
+                    icon: "🙋", 
+                    title: "自己喝半杯", 
+                    description: "浅尝一下，不要太急哦！",
+                    color: "#FFD166"
+                },
+                { 
+                    icon: "👉", 
+                    title: "指定一人喝半杯", 
+                    description: "选一位朋友小酌半杯吧！",
+                    color: "#06D6A0"
+                },
+                { 
+                    icon: "👉", 
+                    title: "指定一人喝一杯", 
+                    description: "选一位朋友陪你干一杯！",
+                    color: "#118AB2"
+                },
+                { 
+                    icon: "💞", 
+                    title: "交杯酒挑战", 
+                    description: "选一位朋友，一起喝交杯酒！",
+                    color: "#EF476F"
+                },
+                { 
+                    icon: "🎭", 
+                    title: "大冒险时刻", 
+                    description: "",
+                    color: "#7B2CBF"
+                },
+                { 
+                    icon: "💖", 
+                    title: "真心话时间", 
+                    description: "",
+                    color: "#F15BB5"
+                },
+                { 
+                    icon: "🎊", 
+                    title: "祝福接力", 
+                    description: "",
+                    color: "#9B5DE5"
+                },
+                { 
+                    icon: "😘", 
+                    title: "全场飞吻", 
+                    description: "向全场所有人送出飞吻，一个都不能少！",
+                    color: "#00BBF9"
+                },
+                { 
+                    icon: "📱", 
+                    title: "抖音异性挑战", 
+                    description: "打开抖音，前五个视频几个异性喝几杯",
+                    color: "#00F5D4"
+                },
+                { 
+                    icon: "🎤", 
+                    title: "即兴演唱", 
+                    description: "",
+                    color: "#FF9E00"
+                }
+            ],
+            
+            // 大冒险内容库
+            dares: [
+                "对前任发我想你了",
+                "电梯里模仿‘你们为什么都看不上我’那一段",
+                "给通讯录里第10个人打电话说'我爱你'",
+                "模仿高雅人士跳舞",
+                "随机找一个人十指相扣朗诵骆宾王的《鹅》",
+                "用自己的方言朗诵一段歌词",
+                "对下一位玩家说一分钟情话",
+                "在厕所写全国可飞+班主任手机号",
+                "把所有前任拉到一个群里",
+                "抓陌生人手喊‘今年我没奔上小康拖你后腿了’"
+            ],
+            
+            // 真心话内容库
+            truths: [
+                "你曾经暗恋过谁？什么时候？",
+                "你做过最尴尬的一件事是什么？",
+                "你最大的秘密是什么？",
+                "你曾经撒过的最离谱的谎是什么？",
+                "如果你可以改变自己的一件事，会是什么？",
+                "你理想中的另一半是什么样子？",
+                "你做过最后悔的一件事是什么？",
+                "你最想拥有的超能力是什么？",
+                "你最害怕的事情是什么？",
+                "如果再见到前任最想对他（她）说什么？"
+            ],
+            
+            // 祝福语内容库
+            blessings: [
+                "祝大家身体健康，万事如意！",
+                "愿友谊长存，青春不老！",
+                "祝在座各位财源滚滚，心想事成！",
+                "愿所有的美好都如期而至！",
+                "祝大家笑口常开，好运连连！",
+                "愿我们友谊的小船升级为巨轮！",
+                "祝大家早日脱单，幸福美满！",
+                "愿我们每次相聚都如此开心！",
+                "祝大家事业有成，步步高升！",
+                "愿快乐永远伴随我们左右！"
+            ],
+            
+            // 歌曲内容库
+            songs: [
+                "《朋友》——周华健",
+                "《小幸运》——田馥甄",
+                "《告白气球》——周杰伦",
+                "《后来》——刘若英",
+                "《突然好想你》——五月天",
+                "《成都》——赵雷",
+                "《泡沫》——邓紫棋",
+                "《勇气》——梁静茹",
+                "《演员》——薛之谦",
+                "《青春修炼手册》——TFBOYS"
+            ]
+        };
+
+        // 获取随机大冒险
+        function getRandomDare() {
+            const randomIndex = Math.floor(Math.random() * gameData.dares.length);
+            return `大冒险：${gameData.dares[randomIndex]}`;
+        }
+        
+        // 获取随机真心话
+        function getRandomTruth() {
+            const randomIndex = Math.floor(Math.random() * gameData.truths.length);
+            return `真心话：${gameData.truths[randomIndex]}`;
+        }
+        
+        // 获取随机祝福语
+        function getRandomBlessing() {
+            const randomIndex = Math.floor(Math.random() * gameData.blessings.length);
+            return `祝福语：${gameData.blessings[randomIndex]}`;
+        }
+        
+        // 获取随机歌曲
+        function getRandomSong() {
+            const randomIndex = Math.floor(Math.random() * gameData.songs.length);
+            return `演唱歌曲：${gameData.songs[randomIndex]}`;
+        }
+
+        // DOM元素
+        const dice = document.getElementById('dice');
+        const rollBtn = document.getElementById('rollBtn');
+        const resultContainer = document.getElementById('resultContainer');
+        const resultIcon = document.getElementById('resultIcon');
+        const resultTitle = document.getElementById('resultTitle');
+        const resultDescription = document.getElementById('resultDescription');
+        const playerList = document.getElementById('playerList');
+        const addPlayerBtn = document.getElementById('addPlayerBtn');
+        const removePlayerBtn = document.getElementById('removePlayerBtn');
+
+        // 初始化玩家列表
+        function initPlayers() {
+            playerList.innerHTML = '';
+            gameData.players.forEach((player, index) => {
+                const playerElement = document.createElement('div');
+                playerElement.className = `player ${index === gameData.currentPlayer ? 'active' : ''}`;
+                playerElement.textContent = player;
+                playerElement.dataset.index = index;
+                
+                // 双击修改玩家名字
+                playerElement.addEventListener('dblclick', function() {
+                    const newName = prompt('请输入新名字：', player);
+                    if (newName && newName.trim() !== '') {
+                        gameData.players[index] = newName.trim();
+                        playerElement.textContent = newName.trim();
+                    }
+                });
+                
+                playerList.appendChild(playerElement);
+            });
+        }
+
+        // 骰子旋转动画
+        function rollDice() {
+            if (gameData.isRolling) return;
+            
+            gameData.isRolling = true;
+            rollBtn.disabled = true;
+            
+            // 随机结果（1-12）
+            const result = Math.floor(Math.random() * 12) + 1;
+            
+            // 骰子旋转动画
+            const randomX = Math.floor(Math.random() * 720) + 360; // 360-1080度
+            const randomY = Math.floor(Math.random() * 720) + 360;
+            const randomZ = Math.floor(Math.random() * 360);
+            
+            dice.style.transform = `rotateX(${randomX}deg) rotateY(${randomY}deg) rotateZ(${randomZ}deg)`;
+            
+            // 等待动画完成后显示结果
+            setTimeout(() => {
+                showResult(result);
+                gameData.isRolling = false;
+                rollBtn.disabled = false;
+                
+                // 切换到下一个玩家
+                gameData.currentPlayer = (gameData.currentPlayer + 1) % gameData.players.length;
+                initPlayers();
+                
+                // 随机更新大冒险、真心话等内容
+                gameData.faces[6].description = getRandomDare();
+                gameData.faces[7].description = getRandomTruth();
+                gameData.faces[8].description = getRandomBlessing();
+                gameData.faces[11].description = getRandomSong();
+                
+            }, 2000);
+        }
+
+        // 显示结果
+        function showResult(faceNumber) {
+            const face = gameData.faces[faceNumber - 1];
+            
+            resultIcon.textContent = face.icon;
+            resultTitle.textContent = `${face.title}`;
+            resultDescription.textContent = `${gameData.players[gameData.currentPlayer]} ${face.description}`;
+            
+            // 更新结果容器背景色
+            resultContainer.style.backgroundColor = `${face.color}40`; // 添加透明度
+            resultContainer.style.border = `3px solid ${face.color}`;
+            
+            // 添加一些动画效果
+            resultContainer.style.transform = 'scale(1.05)';
+            setTimeout(() => {
+                resultContainer.style.transform = 'scale(1)';
+            }, 300);
+        }
+
+        // 添加玩家
+        function addPlayer() {
+            if (gameData.players.length < 8) {
+                const playerName = prompt('请输入新玩家名字：', `玩家${gameData.players.length + 1}`);
+                if (playerName && playerName.trim() !== '') {
+                    gameData.players.push(playerName.trim());
+                    initPlayers();
+                }
+            } else {
+                alert('最多只能有8位玩家哦！');
+            }
+        }
+
+        // 移除玩家
+        function removePlayer() {
+            if (gameData.players.length > 2) {
+                gameData.players.pop();
+                if (gameData.currentPlayer >= gameData.players.length) {
+                    gameData.currentPlayer = 0;
+                }
+                initPlayers();
+            } else {
+                alert('至少需要2位玩家才能游戏哦！');
+            }
+        }
+
+        // 初始化
+        function init() {
+            // 初始化玩家列表
+            initPlayers();
+            
+            // 初始化大冒险、真心话等内容
+            gameData.faces[6].description = getRandomDare();
+            gameData.faces[7].description = getRandomTruth();
+            gameData.faces[8].description = getRandomBlessing();
+            gameData.faces[11].description = getRandomSong();
+            
+            // 绑定掷骰子按钮事件
+            rollBtn.addEventListener('click', rollDice);
+            
+            // 绑定添加/移除玩家按钮事件
+            addPlayerBtn.addEventListener('click', addPlayer);
+            removePlayerBtn.addEventListener('click', removePlayer);
+            
+            // 初始显示结果
+            showResult(1);
+            
+            // 添加键盘支持
+            document.addEventListener('keydown', function(event) {
+                if (event.code === 'Space' && !gameData.isRolling) {
+                    event.preventDefault();
+                    rollDice();
+                }
+            });
+        }
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
